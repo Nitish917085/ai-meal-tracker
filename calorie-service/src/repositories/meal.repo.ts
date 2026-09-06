@@ -86,7 +86,7 @@ function mapRow(row: MealDbRow): FoodEntry {
 const MEAL_COLUMNS = `id, user_id, meal_type, food_name, quantity, unit, calories,
   protein, carbs, fat, fiber, sugar, sodium, vitamins, minerals, consumed_at, created_at`;
 
-const DATE_RANGE = `(consumed_at AT TIME ZONE 'UTC')::date`;
+const DATE_RANGE = `(consumed_at AT TIME ZONE 'Asia/Kolkata')::date`;
 
 export async function createMeal(userId: number, input: MealInput): Promise<FoodEntry> {
   const { rows } = await pool.query<MealDbRow>(
@@ -218,10 +218,10 @@ export interface DailyTotalsRow {
   sodium: number;
 }
 
-/** Aggregated nutrition totals per calendar day (UTC). */
+/** Aggregated nutrition totals per calendar day in India Standard Time. */
 export async function getDailyTotals(userId: number, start: string, end: string): Promise<DailyTotalsRow[]> {
   const { rows } = await pool.query<DailyTotalsRow>(
-    `SELECT to_char(consumed_at AT TIME ZONE 'UTC', 'YYYY-MM-DD') AS date,
+    `SELECT to_char(consumed_at AT TIME ZONE 'Asia/Kolkata', 'YYYY-MM-DD') AS date,
             COALESCE(SUM(calories), 0) AS calories,
             COALESCE(SUM(protein), 0) AS protein,
             COALESCE(SUM(carbs), 0) AS carbs,

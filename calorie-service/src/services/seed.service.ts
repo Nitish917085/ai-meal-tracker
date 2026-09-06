@@ -53,10 +53,11 @@ function seededRandom(seed: number): () => number {
 }
 
 function isoAt(dayOffset: number, hour: number, minute: number): string {
-  const date = new Date();
-  date.setDate(date.getDate() - dayOffset);
-  date.setHours(hour, minute, 0, 0);
-  return date.toISOString();
+  const dateKey = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
+  const date = new Date(`${dateKey}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() - dayOffset);
+  const indiaDate = date.toISOString().slice(0, 10);
+  return new Date(`${indiaDate}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00+05:30`).toISOString();
 }
 
 /** Meal-appropriate clock times for each meal type. */

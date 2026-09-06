@@ -18,6 +18,7 @@ import {
 import { Close } from '@mui/icons-material';
 import type { MealType } from '../types';
 import type { MealInput } from '../api/meals';
+import { APP_TIME_ZONE } from '../utils/format';
 import { MEAL_TYPE_LABELS, nowISO } from '../utils/format';
 import { MEAL_TYPE_ICONS } from './common/MealTypeIcon';
 import { MINERALS, VITAMINS, nutrientLabel, nutrientUnit, type Nutrient } from '../utils/nutrients';
@@ -367,7 +368,7 @@ export function MealForm({ initial, submitLabel = 'Save entry', submitting, onSu
         onChange={(e) =>
           setForm((p) => ({
             ...p,
-            consumedAt: e.target.value ? new Date(e.target.value).toISOString() : p.consumedAt,
+            consumedAt: e.target.value ? new Date(`${e.target.value}:00+05:30`).toISOString() : p.consumedAt,
           }))
         }
         InputLabelProps={{ shrink: true }}
@@ -397,6 +398,15 @@ export function MealForm({ initial, submitLabel = 'Save entry', submitting, onSu
 function toLocalInput(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
-  const offset = date.getTimezoneOffset();
-  return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 16);
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: APP_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}T${values.hour}:${values.minute}`;
 }

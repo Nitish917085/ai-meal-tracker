@@ -1,6 +1,12 @@
 import type { MealType } from '../types';
 import { nutrientLabel, nutrientUnit } from './nutrients';
 
+export const APP_TIME_ZONE = 'Asia/Kolkata';
+
+export function dateKeyInAppTimeZone(date: Date): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: APP_TIME_ZONE }).format(date);
+}
+
 export const MEAL_TYPE_LABELS: Record<MealType, string> = {
   breakfast: 'Breakfast',
   lunch: 'Lunch',
@@ -19,29 +25,26 @@ export const MEAL_TYPE_EMOJI: Record<MealType, string> = {
 export function formatDate(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return iso;
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  return date.toLocaleDateString(undefined, { timeZone: APP_TIME_ZONE, month: 'short', day: 'numeric', year: 'numeric' });
 }
 
 /** Format an ISO datetime into a compact time (e.g. "8:30 AM"). */
 export function formatTime(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  return date.toLocaleTimeString(undefined, { timeZone: APP_TIME_ZONE, hour: 'numeric', minute: '2-digit' });
 }
 
-/** Today's date as YYYY-MM-DD (local time). */
+/** Today's date as YYYY-MM-DD in India Standard Time. */
 export function todayISO(): string {
-  const now = new Date();
-  const offset = now.getTimezoneOffset();
-  return new Date(now.getTime() - offset * 60_000).toISOString().slice(0, 10);
+  return dateKeyInAppTimeZone(new Date());
 }
 
 /** Shift a YYYY-MM-DD date by N days. */
 export function shiftDate(iso: string, days: number): string {
-  const date = new Date(`${iso}T00:00:00`);
-  date.setDate(date.getDate() + days);
-  const offset = date.getTimezoneOffset();
-  return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 10);
+  const date = new Date(`${iso}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
 }
 
 /** Unit for a micronutrient key (e.g. "vitamin_d" → "µg", "calcium" → "mg"). */
@@ -79,14 +82,14 @@ export function daysBetweenInclusive(start: string, end: string): number {
 export function formatRelativeDate(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  const day = new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
+  const day = dateKeyInAppTimeZone(d);
   const today = todayISO();
   if (day === today) return 'Today';
   if (day === shiftDate(today, -1)) return 'Yesterday';
   const sameYear = day.slice(0, 4) === today.slice(0, 4);
-  return d.toLocaleDateString(undefined, sameYear
+  return d.toLocaleDateString(undefined, { timeZone: APP_TIME_ZONE, ...(sameYear
     ? { weekday: 'short', month: 'short', day: 'numeric' }
-    : { month: 'short', day: 'numeric', year: 'numeric' });
+    : { month: 'short', day: 'numeric', year: 'numeric' }) });
 }
 
 /** Local ISO string for "now", rounded down to the minute. */

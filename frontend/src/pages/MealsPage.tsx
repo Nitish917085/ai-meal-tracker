@@ -21,7 +21,7 @@ import {
 import { Add, Delete, Edit, MoreVert } from '@mui/icons-material';
 import { deleteMeal, listMeals, type MealFilters } from '../api/meals';
 import type { FoodEntry, MealType } from '../types';
-import { formatRelativeDate, formatTime, formatMicros, MEAL_TYPE_LABELS } from '../utils/format';
+import { dateKeyInAppTimeZone, formatRelativeDate, formatTime, formatMicros, MEAL_TYPE_LABELS } from '../utils/format';
 import { DateRangeFilter, rangeForPreset, type DateRange, type RangePreset } from '../components/common/DateRangeFilter';
 import { MealDialog } from '../components/MealDialog';
 import { MealDetailDialog } from '../components/MealDetailDialog';
@@ -34,8 +34,7 @@ const MEAL_FILTERS: Array<MealType | 'all'> = ['all', 'breakfast', 'lunch', 'din
 const PAGE_SIZE = 20;
 
 function dayKey(iso: string): string {
-  const d = new Date(iso);
-  return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
+  return dateKeyInAppTimeZone(new Date(iso));
 }
 
 export function MealsPage({ embedded = false }: { embedded?: boolean } = {}) {

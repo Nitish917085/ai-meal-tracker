@@ -3,7 +3,7 @@
  * or it hallucinates a wrong range. Built per-request so the date is always correct.
  */
 export function buildSystemPrompt(memories: string[]): string {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
   const memoryBlock = memories.length
     ? `\n\n## User memory (from previous conversations)\n${memories
         .map((m) => `- ${m}`)

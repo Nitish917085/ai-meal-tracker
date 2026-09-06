@@ -2,6 +2,7 @@ import { Box, Button, Grid, LinearProgress, Skeleton, Typography } from '@mui/ma
 import { Link } from 'react-router-dom';
 import type { GoalComparison } from '../../api/reports';
 import { macroColors } from '../../theme';
+import { APP_TIME_ZONE } from '../../utils/format';
 
 const DEFAULT_TARGET = 2000;
 
@@ -73,7 +74,7 @@ export function TodaySummary({
   );
 
   if (hero) {
-    const dateLabel = new Date().toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    const dateLabel = new Date().toLocaleDateString(undefined, { timeZone: APP_TIME_ZONE, weekday: 'short', month: 'short', day: 'numeric' });
     const muted = 'text.secondary';
     const track = '#ececec';
     const heroBody = (

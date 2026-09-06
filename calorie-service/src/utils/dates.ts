@@ -1,6 +1,12 @@
 import { badRequest } from './httpError';
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const INDIA_TIME_ZONE = 'Asia/Kolkata';
+
+/** Return a date's YYYY-MM-DD representation in India Standard Time. */
+function indiaDateKey(date: Date): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: INDIA_TIME_ZONE }).format(date);
+}
 
 /** Validate a YYYY-MM-DD string, throwing a 400 on failure. */
 export function assertDate(value: string, label = 'date'): string {
@@ -20,7 +26,7 @@ export function parseDateRange(
   end?: string,
   defaultDays = 30,
 ): { start: string; end: string } {
-  const endDate = end ? assertDate(end) : toISO(new Date());
+  const endDate = end ? assertDate(end) : indiaDateKey(new Date());
   const startDate = start ? assertDate(start) : toISO(addDays(new Date(endDate), -(defaultDays - 1)));
 
   if (startDate > endDate) {
@@ -29,17 +35,13 @@ export function parseDateRange(
   return { start: startDate, end: endDate };
 }
 
-function toISO(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
-
-function addDays(date: Date, days: number): Date {
-  const copy = new Date(date);
+function addDays(date: string, days: number): string {
+  const copy = new Date(`${date}T00:00:00Z`);
   copy.setUTCDate(copy.getUTCDate() + days);
-  return copy;
+  return copy.toISOString().slice(0, 10);
 }
 
-/** Human friendly "today" in UTC (used as a default consumed date). */
+/** Human-friendly today in India Standard Time. Timestamps remain UTC. */
 export function todayISO(): string {
-  return new Date().toISOString();
+  return indiaDateKey(new Date());
 }
