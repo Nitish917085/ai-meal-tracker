@@ -84,8 +84,8 @@ authRouter.post(
   validate(verifyOtpSchema),
   asyncHandler(async (req, res) => {
     const { email, otp } = req.body as { email: string; otp: string };
-    await authService.verifyOtp(email, otp);
-    res.json({ message: 'OTP verified successfully' });
+    const resetToken = await authService.verifyOtp(email, otp);
+    res.json({ message: 'OTP verified successfully', resetToken });
   }),
 );
 
@@ -93,12 +93,11 @@ authRouter.post(
   '/reset-password',
   validate(resetPasswordSchema),
   asyncHandler(async (req, res) => {
-    const { email, otp, newPassword } = req.body as {
-      email: string;
-      otp?: string;
+    const { resetToken, newPassword } = req.body as {
+      resetToken: string;
       newPassword: string;
     };
-    await authService.resetPassword(email, otp, newPassword);
+    await authService.resetPassword(resetToken, newPassword);
     res.json({ message: 'Password reset successfully' });
   }),
 );

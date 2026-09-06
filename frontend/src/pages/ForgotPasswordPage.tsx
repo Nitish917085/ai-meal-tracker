@@ -29,6 +29,7 @@ export function ForgotPasswordPage() {
   const [step, setStep] = useState<Step>('email');
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
+  const [resetToken, setResetToken] = useState<string | null>(null);
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [info, setInfo] = useState<string | null>(null);
@@ -65,7 +66,8 @@ export function ForgotPasswordPage() {
     }
     setSubmitting(true);
     try {
-      await authApi.verifyOtp(email, otp);
+      const result = await authApi.verifyOtp(email, otp);
+      setResetToken(result.resetToken);
       setStep('password');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Invalid OTP');
@@ -88,7 +90,11 @@ export function ForgotPasswordPage() {
     }
     setSubmitting(true);
     try {
-      await authApi.resetPassword(email, password, otp);
+      if (!resetToken) {
+        setError('Verify the OTP before choosing a new password');
+        return;
+      }
+      await authApi.resetPassword(resetToken, password);
       setStep('done');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Unable to reset password');

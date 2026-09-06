@@ -271,8 +271,8 @@ List endpoints support `page` & `pageSize` query params and return
 | POST   | `/api/auth/logout`            | `{ refreshToken }` → revoke it           |
 | GET    | `/api/auth/me`                | Current user                             |
 | POST   | `/api/auth/forgot-password`   | `{ email }` → sends reset OTP            |
-| POST   | `/api/auth/verify-otp`        | `{ email, otp }` → confirm OTP           |
-| POST   | `/api/auth/reset-password`    | `{ email, otp, newPassword }` → reset    |
+| POST   | `/api/auth/verify-otp`        | `{ email, otp }` → short-lived reset token |
+| POST   | `/api/auth/reset-password`    | `{ resetToken, newPassword }` → reset    |
 | GET    | `/api/goals`                  | Active + goal history                    |
 | POST   | `/api/goals`                  | Create/activate a goal                   |
 | PUT    | `/api/goals/:id`              | Update a goal                            |

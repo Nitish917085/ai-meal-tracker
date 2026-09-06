@@ -113,9 +113,7 @@ export const verifyOtpSchema = z.object({
 });
 
 export const resetPasswordSchema = z.object({
-  email: z.string().email('A valid email is required'),
-  // OTP is only required when full auth is enabled; the service re-checks it.
-  otp: z.string().regex(/^\d{6}$/, 'OTP must be 6 digits').optional(),
+  resetToken: z.string().min(1, 'Reset token is required'),
   newPassword: z.string().min(8, 'Password must be at least 8 characters'),
 });
 

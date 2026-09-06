@@ -103,8 +103,8 @@ header. List endpoints accept `page` & `pageSize` and return
 | POST   | `/api/auth/logout`      | `{ refreshToken }` → revoke it |
 | GET    | `/api/auth/me`          | Current user |
 | POST   | `/api/auth/forgot-password` | `{ email }` → sends a reset OTP |
-| POST   | `/api/auth/verify-otp`  | `{ email, otp }` → confirm OTP |
-| POST   | `/api/auth/reset-password` | `{ email, otp, newPassword }` → reset (revokes all sessions) |
+| POST   | `/api/auth/verify-otp`  | `{ email, otp }` → short-lived reset token |
+| POST   | `/api/auth/reset-password` | `{ resetToken, newPassword }` → reset (revokes all sessions) |
 
 ### Goals
 
@@ -183,9 +183,10 @@ The service uses its **own custom auth** (not Supabase Auth):
   stored as a **SHA-256 hash** (never plaintext), with expiry and one-time rotation.
 - **Passwords** — bcrypt-hashed (cost 10).
 - **Email verification & password reset** — 6-digit OTPs delivered via Gmail SMTP
-  (`nodemailer`), valid for 10 minutes. Set `EMAIL_USER` / `EMAIL_PASS`, or set
-  `BYPASS_FULL_AUTH=true` to skip OTP verification during development (codes are
-  logged to the console instead).
+  (`nodemailer`), valid for 10 minutes. The OTP is accepted once and exchanged
+  for a hashed, short-lived, one-time reset token; the raw OTP is never submitted
+  again with the new password. Set `EMAIL_USER` / `EMAIL_PASS`, or set
+  `BYPASS_FULL_AUTH=true` for development OTP delivery to the console.
 
 ---
 

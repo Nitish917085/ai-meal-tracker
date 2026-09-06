@@ -29,14 +29,13 @@ export function forgotPassword(email: string): Promise<{ message: string }> {
   return api.post<{ message: string }>('/auth/forgot-password', { email });
 }
 
-export function verifyOtp(email: string, otp: string): Promise<{ message: string }> {
-  return api.post<{ message: string }>('/auth/verify-otp', { email, otp });
+export function verifyOtp(email: string, otp: string): Promise<{ message: string; resetToken: string }> {
+  return api.post<{ message: string; resetToken: string }>('/auth/verify-otp', { email, otp });
 }
 
 export function resetPassword(
-  email: string,
+  resetToken: string,
   newPassword: string,
-  otp?: string,
 ): Promise<{ message: string }> {
-  return api.post<{ message: string }>('/auth/reset-password', { email, otp, newPassword });
+  return api.post<{ message: string }>('/auth/reset-password', { resetToken, newPassword });
 }

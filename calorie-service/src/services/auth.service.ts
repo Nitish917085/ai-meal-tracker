@@ -149,6 +149,7 @@ export async function logout(refreshToken: string): Promise<void> {
 
 const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
 const otpStore = new Map<string, { otp: string; expiresAt: number }>();
+const resetTokenStore = new Map<string, { email: string; expiresAt: number }>();
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -198,22 +199,31 @@ export async function sendOtp(email: string): Promise<void> {
   );
 }
 
-/** Confirm the OTP matches the most recently issued one. */
-export async function verifyOtp(email: string, otp: string): Promise<void> {
-  verifyStoredOtp(normalizeEmail(email), otp);
+/** Confirm the OTP once and issue a short-lived, one-time reset token. */
+export async function verifyOtp(email: string, otp: string): Promise<string> {
+  const normalized = normalizeEmail(email);
+  verifyStoredOtp(normalized, otp);
+
+  const resetToken = crypto.randomBytes(32).toString('base64url');
+  resetTokenStore.set(hashToken(resetToken), {
+    email: normalized,
+    expiresAt: Date.now() + OTP_TTL_MS,
+  });
+  return resetToken;
 }
 
-/** Reset the password, requiring a valid OTP unless full auth is bypassed. */
+/** Reset the password with the one-time token issued after OTP verification. */
 export async function resetPassword(
-  email: string,
-  otp: string | undefined,
+  resetToken: string,
   newPassword: string,
 ): Promise<void> {
-  const normalized = normalizeEmail(email);
-
-  if (!config.bypassFullAuth) {
-    verifyStoredOtp(normalized, otp);
+  const tokenHash = hashToken(resetToken);
+  const record = resetTokenStore.get(tokenHash);
+  if (!record || record.expiresAt < Date.now()) {
+    throw unauthorized('Invalid or expired reset token');
   }
+  const normalized = record.email;
+  resetTokenStore.delete(tokenHash);
 
   const row = await findUserByEmail(normalized);
   if (!row) throw notFound('User not found');
