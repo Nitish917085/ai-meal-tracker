@@ -28,6 +28,7 @@ export function TodaySummary({
     border: 1,
     borderColor: 'divider',
     bgcolor: 'background.paper',
+    borderRadius: '4px',
     px: compact ? 2 : { xs: 2, sm: 3 },
     py: compact ? 1.5 : { xs: 2, sm: 3 },
   } as const;
@@ -35,7 +36,7 @@ export function TodaySummary({
   if (loading || !data) {
     if (hero) {
       return (
-        <Box sx={{ bgcolor: 'background.paper', border: 1, borderColor: 'divider', p: { xs: 2.5, sm: 3 } }}>
+        <Box sx={{ bgcolor: 'background.paper', border: 1, borderColor: 'divider', p: { xs: 2.5, sm: 3 }, borderRadius: '4px' }}>
           <Skeleton width="30%" />
           <Skeleton width="55%" height={56} />
           <Skeleton variant="rectangular" height={8} sx={{ my: 2 }} />
@@ -76,7 +77,7 @@ export function TodaySummary({
     const muted = 'text.secondary';
     const track = '#ececec';
     const heroBody = (
-      <Box sx={{ bgcolor: 'background.paper', color: 'text.primary', border: 1, borderColor: 'divider', p: { xs: 2.5, sm: 3 }, position: 'relative', overflow: 'hidden' }}>
+      <Box sx={{ bgcolor: 'background.paper', color: 'text.primary', border: 1, borderColor: 'divider', p: { xs: 2.5, sm: 3 }, position: 'relative', overflow: 'hidden', borderRadius: '4px' }}>
         {/* Brand notch, echoes the logo mark. */}
         <Box aria-hidden sx={{ position: 'absolute', right: 0, top: 0, width: 14, height: 14, bgcolor: 'secondary.main' }} />
 

@@ -68,9 +68,9 @@ export function RegisterPage() {
         setInfo(message);
         setOtpSent(true);
       } else {
-        // Second submit: verify the OTP and sign in.
+        // Second submit: verify the OTP and sign in, then start first-run onboarding.
         await verifyRegister(email, otp);
-        navigate('/');
+        navigate('/onboarding');
       }
     } catch (err) {
       setErrors(extractMessages(err));

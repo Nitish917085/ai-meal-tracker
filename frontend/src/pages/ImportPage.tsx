@@ -344,9 +344,19 @@ export function ImportPage() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {entries.map((entry, i) => (
-                    <ImportRow key={i} entry={entry} index={i} onEdit={setEditingIndex} />
-                  ))}
+                  {entries.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={9} align="center" sx={{ py: 4 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          No entries yet
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    entries.map((entry, i) => (
+                      <ImportRow key={i} entry={entry} index={i} onEdit={setEditingIndex} />
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </TableContainer>

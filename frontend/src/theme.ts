@@ -1,58 +1,71 @@
 import { createTheme } from '@mui/material/styles';
 
 /**
- * Typeface-style theme: white canvas, black as the primary action color,
- * red as the accent. Every corner is square (border radius 0), including
- * components that ship with their own hardcoded radii.
+ * Calorie-tracking theme: a calm, health-focused palette.
+ * Emerald green is the primary action color, amber is the accent
+ * (calories / goals / highlights), and soft mint is the tertiary surface.
+ * Every corner uses a 4px border radius, including components that ship
+ * with their own hardcoded radii.
  */
 
-const BLACK = '#0a0a0a';
-const BLACK_HOVER = '#262626';
-const RED = '#e5232b';
-const RED_DARK = '#b8161d';
-const RED_LIGHT = '#ff5a60';
-const WHITE = '#ffffff';
-const CANVAS = '#fafafa';
-const BORDER = '#e5e5e5';
-const TEXT_SECONDARY = '#5c5c5c';
+// Brand
+const PRIMARY = '#16A34A'; // emerald green
+const PRIMARY_DARK = '#15803D';
+const PRIMARY_LIGHT = '#22C55E';
+const SECONDARY = '#F59E0B'; // amber
+const SECONDARY_DARK = '#D97706';
+const SECONDARY_LIGHT = '#FBBF24';
+const MINT = '#ECFDF5'; // tertiary — soft mint
+
+// Neutrals
+const WHITE = '#FFFFFF';
+const BACKGROUND = '#F8FAFC';
+const BORDER = '#E2E8F0';
+const TEXT_PRIMARY = '#0F172A';
+const TEXT_SECONDARY = '#64748B';
+const TEXT_DISABLED = '#94A3B8';
+
+// Semantic
+const ERROR = '#DC2626';
+const ERROR_DARK = '#B91C1C';
 
 export const theme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: BLACK,
-      dark: '#000000',
-      light: BLACK_HOVER,
+      main: PRIMARY,
+      dark: PRIMARY_DARK,
+      light: PRIMARY_LIGHT,
       contrastText: WHITE,
     },
     secondary: {
-      main: RED,
-      dark: RED_DARK,
-      light: RED_LIGHT,
-      contrastText: WHITE,
+      main: SECONDARY,
+      dark: SECONDARY_DARK,
+      light: SECONDARY_LIGHT,
+      contrastText: TEXT_PRIMARY,
     },
     background: {
-      default: CANVAS,
+      default: BACKGROUND,
       paper: WHITE,
     },
     text: {
-      primary: BLACK,
+      primary: TEXT_PRIMARY,
       secondary: TEXT_SECONDARY,
-      disabled: '#a3a3a3',
+      disabled: TEXT_DISABLED,
     },
     divider: BORDER,
-    error: { main: RED, dark: RED_DARK, contrastText: WHITE },
-    warning: { main: BLACK, contrastText: WHITE },
-    info: { main: BLACK, contrastText: WHITE },
-    success: { main: BLACK, contrastText: WHITE },
+    error: { main: ERROR, dark: ERROR_DARK, contrastText: WHITE },
+    warning: { main: SECONDARY, dark: SECONDARY_DARK, contrastText: TEXT_PRIMARY },
+    info: { main: PRIMARY, contrastText: WHITE },
+    success: { main: PRIMARY, dark: PRIMARY_DARK, contrastText: WHITE },
     action: {
-      hover: 'rgba(10, 10, 10, 0.05)',
-      selected: 'rgba(229, 35, 43, 0.10)',
-      focus: 'rgba(229, 35, 43, 0.16)',
+      hover: 'rgba(22, 163, 74, 0.08)',
+      selected: 'rgba(22, 163, 74, 0.14)',
+      focus: 'rgba(22, 163, 74, 0.20)',
     },
   },
   shape: {
-    borderRadius: 0,
+    borderRadius: 4,
   },
   typography: {
     fontFamily:
@@ -65,62 +78,63 @@ export const theme = createTheme({
   components: {
     MuiCssBaseline: {
       styleOverrides: {
-        body: { backgroundColor: CANVAS, color: BLACK },
-        '::selection': { backgroundColor: RED, color: WHITE },
-        a: { color: RED },
+        body: { backgroundColor: BACKGROUND, color: TEXT_PRIMARY },
+        '::selection': { backgroundColor: PRIMARY, color: WHITE },
+        a: { color: PRIMARY_DARK },
         // Keyboard focus: one visible, on-brand ring everywhere (links, native inputs, custom elements).
-        ':focus-visible': { outline: `2px solid ${BLACK}`, outlineOffset: 2 },
+        ':focus-visible': { outline: `2px solid ${PRIMARY}`, outlineOffset: 2 },
       },
     },
     MuiButtonBase: {
       styleOverrides: {
         // MUI removes the native outline; restore it for keyboard users only.
-        root: { '&.Mui-focusVisible': { outline: `2px solid ${BLACK}`, outlineOffset: 2 } },
+        root: { '&.Mui-focusVisible': { outline: `2px solid ${PRIMARY}`, outlineOffset: 2 } },
       },
     },
     MuiButton: {
       styleOverrides: {
-        root: { borderRadius: 0, paddingInline: 18, boxShadow: 'none' },
+        root: { borderRadius: 4, paddingInline: 18, boxShadow: 'none' },
         containedPrimary: {
-          backgroundColor: BLACK,
-          '&:hover': { backgroundColor: BLACK_HOVER, boxShadow: 'none' },
+          backgroundColor: PRIMARY,
+          '&:hover': { backgroundColor: PRIMARY_DARK, boxShadow: 'none' },
         },
         containedSecondary: {
-          backgroundColor: RED,
-          '&:hover': { backgroundColor: RED_DARK, boxShadow: 'none' },
+          backgroundColor: SECONDARY,
+          color: TEXT_PRIMARY,
+          '&:hover': { backgroundColor: SECONDARY_DARK, color: TEXT_PRIMARY, boxShadow: 'none' },
         },
         outlinedPrimary: {
-          borderColor: BLACK,
-          color: BLACK,
-          '&:hover': { borderColor: BLACK, backgroundColor: 'rgba(10,10,10,0.05)' },
+          borderColor: PRIMARY,
+          color: PRIMARY_DARK,
+          '&:hover': { borderColor: PRIMARY_DARK, backgroundColor: 'rgba(22,163,74,0.08)' },
         },
         outlinedSecondary: {
-          borderColor: RED,
-          color: RED,
-          '&:hover': { borderColor: RED_DARK, backgroundColor: 'rgba(229,35,43,0.06)' },
+          borderColor: SECONDARY,
+          color: SECONDARY_DARK,
+          '&:hover': { borderColor: SECONDARY_DARK, backgroundColor: 'rgba(245,158,11,0.08)' },
         },
-        textPrimary: { color: BLACK },
-        textSecondary: { color: RED },
+        textPrimary: { color: PRIMARY_DARK },
+        textSecondary: { color: SECONDARY_DARK },
       },
     },
     MuiIconButton: {
       styleOverrides: {
-        root: { borderRadius: 0 },
-        colorPrimary: { color: BLACK },
-        colorSecondary: { color: RED },
+        root: { borderRadius: 4 },
+        colorPrimary: { color: PRIMARY },
+        colorSecondary: { color: SECONDARY_DARK },
       },
     },
     MuiPaper: {
       styleOverrides: {
-        root: { backgroundImage: 'none', borderRadius: 0 },
-        rounded: { borderRadius: 0 },
+        root: { backgroundImage: 'none', borderRadius: 4 },
+        rounded: { borderRadius: 4 },
         elevation: { boxShadow: 'none' },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 0,
+          borderRadius: 4,
           boxShadow: 'none',
           border: `1px solid ${BORDER}`,
           backgroundColor: WHITE,
@@ -131,9 +145,9 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundColor: WHITE,
-          color: BLACK,
+          color: TEXT_PRIMARY,
           backgroundImage: 'none',
-          borderBottom: `2px solid ${BLACK}`,
+          borderBottom: `1px solid ${BORDER}`,
         },
       },
     },
@@ -144,193 +158,199 @@ export const theme = createTheme({
     },
     MuiBottomNavigationAction: {
       styleOverrides: {
-        root: { color: TEXT_SECONDARY, '&.Mui-selected': { color: RED } },
+        root: { color: TEXT_SECONDARY, '&.Mui-selected': { color: PRIMARY } },
       },
     },
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
-          borderRadius: 0,
+          borderRadius: 4,
           backgroundColor: WHITE,
-          // Inputs already show focus via the 2px black border; skip the extra ring.
+          // Inputs already show focus via the 2px emerald border; skip the extra ring.
           '& input:focus-visible, & textarea:focus-visible': { outline: 'none' },
-          '& .MuiOutlinedInput-notchedOutline': { borderColor: '#cfcfcf' },
-          '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: BLACK },
-          '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: BLACK, borderWidth: 2 },
+          '& .MuiOutlinedInput-notchedOutline': { borderColor: BORDER },
+          '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: PRIMARY },
+          '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: PRIMARY, borderWidth: 2 },
         },
-        notchedOutline: { borderRadius: 0 },
+        notchedOutline: { borderRadius: 4 },
       },
     },
-    MuiFilledInput: { styleOverrides: { root: { borderRadius: 0 } } },
-    MuiInputBase: { styleOverrides: { root: { borderRadius: 0 } } },
+    MuiFilledInput: { styleOverrides: { root: { borderRadius: 4 } } },
+    MuiInputBase: { styleOverrides: { root: { borderRadius: 4 } } },
     MuiInputLabel: {
-      styleOverrides: { root: { '&.Mui-focused': { color: BLACK } } },
+      styleOverrides: { root: { '&.Mui-focused': { color: PRIMARY } } },
     },
     MuiChip: {
       styleOverrides: {
-        root: { borderRadius: 0, backgroundColor: '#f0f0f0', color: BLACK },
-        colorPrimary: { backgroundColor: BLACK, color: WHITE },
-        colorSecondary: { backgroundColor: RED, color: WHITE },
-        outlined: { borderColor: BLACK, backgroundColor: 'transparent' },
-        outlinedSecondary: { borderColor: RED, color: RED },
+        root: { borderRadius: 4, backgroundColor: '#F1F5F9', color: TEXT_PRIMARY },
+        colorPrimary: { backgroundColor: PRIMARY, color: WHITE },
+        colorSecondary: { backgroundColor: SECONDARY, color: TEXT_PRIMARY },
+        outlined: { borderColor: PRIMARY, backgroundColor: 'transparent' },
+        outlinedSecondary: { borderColor: SECONDARY, color: SECONDARY_DARK },
       },
     },
     MuiAvatar: {
       styleOverrides: {
-        root: { borderRadius: 0, backgroundColor: BLACK, color: WHITE },
-        circular: { borderRadius: 0 },
-        rounded: { borderRadius: 0 },
+        root: { borderRadius: 4, backgroundColor: PRIMARY, color: WHITE },
+        circular: { borderRadius: 4 },
+        rounded: { borderRadius: 4 },
       },
     },
     MuiAlert: {
       styleOverrides: {
-        root: { borderRadius: 0 },
-        standardError: { backgroundColor: '#fdecec', color: BLACK, border: `1px solid ${RED}` },
-        standardSuccess: { backgroundColor: '#f5f5f5', color: BLACK, border: `1px solid ${BLACK}` },
-        standardWarning: { backgroundColor: '#f5f5f5', color: BLACK, border: `1px solid ${BLACK}` },
-        standardInfo: { backgroundColor: '#f5f5f5', color: BLACK, border: `1px solid ${BLACK}` },
-        filledError: { backgroundColor: RED, color: WHITE },
-        filledSuccess: { backgroundColor: BLACK, color: WHITE },
-        filledWarning: { backgroundColor: BLACK, color: WHITE },
-        filledInfo: { backgroundColor: BLACK, color: WHITE },
+        root: { borderRadius: 4 },
+        standardError: { backgroundColor: '#FEF2F2', color: TEXT_PRIMARY, border: `1px solid ${ERROR}` },
+        standardSuccess: { backgroundColor: MINT, color: TEXT_PRIMARY, border: `1px solid ${PRIMARY}` },
+        standardWarning: { backgroundColor: '#FFF7ED', color: TEXT_PRIMARY, border: `1px solid ${SECONDARY}` },
+        standardInfo: { backgroundColor: '#F1F5F9', color: TEXT_PRIMARY, border: `1px solid ${BORDER}` },
+        filledError: { backgroundColor: ERROR, color: WHITE },
+        filledSuccess: { backgroundColor: PRIMARY, color: WHITE },
+        filledWarning: { backgroundColor: SECONDARY, color: TEXT_PRIMARY },
+        filledInfo: { backgroundColor: TEXT_PRIMARY, color: WHITE },
       },
     },
     MuiDialog: {
       styleOverrides: {
-        paper: { borderRadius: 0, border: `2px solid ${BLACK}`, boxShadow: 'none' },
+        paper: { borderRadius: 4, border: `1px solid ${BORDER}`, boxShadow: 'none' },
       },
     },
     MuiMenu: {
       styleOverrides: {
-        paper: { borderRadius: 0, border: `1px solid ${BLACK}`, boxShadow: 'none' },
+        paper: { borderRadius: 4, border: `1px solid ${BORDER}`, boxShadow: 'none' },
       },
     },
     MuiMenuItem: {
       styleOverrides: {
         root: {
-          '&.Mui-selected': { backgroundColor: 'rgba(229,35,43,0.10)', color: RED },
-          '&:hover': { backgroundColor: BLACK, color: WHITE },
+          '&.Mui-selected': { backgroundColor: 'rgba(22,163,74,0.12)', color: PRIMARY_DARK },
+          '&:hover': { backgroundColor: 'rgba(22,163,74,0.08)', color: PRIMARY_DARK },
         },
       },
     },
     MuiPopover: {
-      styleOverrides: { paper: { borderRadius: 0 } },
+      styleOverrides: { paper: { borderRadius: 4 } },
     },
     MuiTooltip: {
       styleOverrides: {
-        tooltip: { borderRadius: 0, backgroundColor: BLACK, color: WHITE },
-        arrow: { color: BLACK },
+        tooltip: { borderRadius: 4, backgroundColor: TEXT_PRIMARY, color: WHITE },
+        arrow: { color: TEXT_PRIMARY },
       },
     },
     MuiSnackbarContent: {
       styleOverrides: {
-        root: { borderRadius: 0, backgroundColor: BLACK, color: WHITE },
+        root: { borderRadius: 4, backgroundColor: TEXT_PRIMARY, color: WHITE },
       },
     },
     MuiLinearProgress: {
       styleOverrides: {
-        root: { borderRadius: 0, backgroundColor: '#ececec' },
-        bar: { borderRadius: 0, backgroundColor: RED },
+        root: { borderRadius: 4, backgroundColor: BORDER },
+        bar: { borderRadius: 4, backgroundColor: PRIMARY },
       },
     },
     MuiToggleButton: {
       styleOverrides: {
         root: {
-          borderRadius: 0,
-          borderColor: BLACK,
-          color: BLACK,
-          '&.Mui-selected': { backgroundColor: BLACK, color: WHITE, '&:hover': { backgroundColor: BLACK_HOVER } },
+          borderRadius: 4,
+          borderColor: PRIMARY,
+          color: TEXT_PRIMARY,
+          '&.Mui-selected': { backgroundColor: PRIMARY, color: WHITE, '&:hover': { backgroundColor: PRIMARY_DARK } },
         },
       },
     },
     MuiToggleButtonGroup: {
       styleOverrides: {
-        root: { borderRadius: 0 },
-        grouped: { borderRadius: 0, '&:first-of-type': { borderRadius: 0 }, '&:last-of-type': { borderRadius: 0 } },
+        root: { borderRadius: 4 },
+        grouped: {
+          // Only round the outer corners; the joined inner edges stay square so
+          // adjacent buttons meet cleanly without white gaps at the seams.
+          borderRadius: 0,
+          '&:first-of-type': { borderTopLeftRadius: 4, borderBottomLeftRadius: 4 },
+          '&:last-of-type': { borderTopRightRadius: 4, borderBottomRightRadius: 4 },
+        },
       },
     },
     MuiPaginationItem: {
       styleOverrides: {
         root: {
-          borderRadius: 0,
-          '&.Mui-selected': { backgroundColor: BLACK, color: WHITE, '&:hover': { backgroundColor: BLACK_HOVER } },
+          borderRadius: 4,
+          '&.Mui-selected': { backgroundColor: PRIMARY, color: WHITE, '&:hover': { backgroundColor: PRIMARY_DARK } },
         },
       },
     },
     MuiTableCell: {
       styleOverrides: {
         root: { borderBottom: `1px solid ${BORDER}` },
-        head: { backgroundColor: BLACK, color: WHITE, fontWeight: 700 },
+        head: { backgroundColor: TEXT_PRIMARY, color: WHITE, fontWeight: 700 },
       },
     },
     MuiTableRow: {
-      styleOverrides: { root: { '&:hover': { backgroundColor: 'rgba(229,35,43,0.05)' } } },
+      styleOverrides: { root: { '&:hover': { backgroundColor: 'rgba(22,163,74,0.04)' } } },
     },
     MuiDivider: {
       styleOverrides: { root: { borderColor: BORDER } },
     },
     MuiSkeleton: {
-      styleOverrides: { root: { borderRadius: 0 } },
+      styleOverrides: { root: { borderRadius: 4 } },
     },
     MuiBadge: {
-      styleOverrides: { badge: { borderRadius: 0, backgroundColor: RED, color: WHITE } },
+      styleOverrides: { badge: { borderRadius: 4, backgroundColor: PRIMARY, color: WHITE } },
     },
     MuiTabs: {
-      styleOverrides: { indicator: { backgroundColor: RED, height: 3 } },
+      styleOverrides: { indicator: { backgroundColor: PRIMARY, height: 3 } },
     },
     MuiTab: {
-      styleOverrides: { root: { color: TEXT_SECONDARY, '&.Mui-selected': { color: BLACK } } },
+      styleOverrides: { root: { color: TEXT_SECONDARY, '&.Mui-selected': { color: PRIMARY_DARK } } },
     },
     MuiSwitch: {
       styleOverrides: {
-        track: { borderRadius: 0 },
-        thumb: { borderRadius: 0 },
-        switchBase: { '&.Mui-checked': { color: RED }, '&.Mui-checked + .MuiSwitch-track': { backgroundColor: RED } },
+        track: { borderRadius: 4 },
+        thumb: { borderRadius: 4 },
+        switchBase: { '&.Mui-checked': { color: PRIMARY }, '&.Mui-checked + .MuiSwitch-track': { backgroundColor: PRIMARY } },
       },
     },
     MuiSlider: {
       styleOverrides: {
-        root: { color: RED },
-        thumb: { borderRadius: 0 },
-        track: { borderRadius: 0 },
-        rail: { borderRadius: 0 },
+        root: { color: PRIMARY },
+        thumb: { borderRadius: 4 },
+        track: { borderRadius: 4 },
+        rail: { borderRadius: 4 },
       },
     },
     MuiCheckbox: {
-      styleOverrides: { root: { color: BLACK, '&.Mui-checked': { color: RED } } },
+      styleOverrides: { root: { color: TEXT_SECONDARY, '&.Mui-checked': { color: PRIMARY } } },
     },
     MuiRadio: {
-      styleOverrides: { root: { color: BLACK, '&.Mui-checked': { color: RED } } },
+      styleOverrides: { root: { color: TEXT_SECONDARY, '&.Mui-checked': { color: PRIMARY } } },
     },
     MuiLink: {
-      styleOverrides: { root: { color: RED } },
+      styleOverrides: { root: { color: PRIMARY_DARK } },
     },
     MuiCircularProgress: {
-      styleOverrides: { root: { color: RED } },
+      styleOverrides: { root: { color: PRIMARY } },
     },
     MuiFab: {
-      styleOverrides: { root: { borderRadius: 0, boxShadow: 'none' } },
+      styleOverrides: { root: { borderRadius: 4, boxShadow: 'none' } },
     },
     MuiListItemButton: {
       styleOverrides: {
-        root: { borderRadius: 0, '&.Mui-selected': { backgroundColor: 'rgba(229,35,43,0.10)' } },
+        root: { borderRadius: 4, '&.Mui-selected': { backgroundColor: 'rgba(22,163,74,0.12)' } },
       },
     },
     MuiAccordion: {
-      styleOverrides: { root: { borderRadius: 0, '&:first-of-type, &:last-of-type': { borderRadius: 0 } } },
+      styleOverrides: { root: { borderRadius: 4, '&:first-of-type, &:last-of-type': { borderRadius: 4 } } },
     },
   },
 });
 
 /** Shared colors for macronutrient charts and progress bars. */
 export const macroColors = {
-  protein: RED,
-  carbs: BLACK,
-  fat: '#f08f93',
+  protein: '#3B82F6', // blue
+  carbs: SECONDARY, // amber
+  fat: '#F43F5E', // rose
 } as const;
 
 /** Accent used for chart bars and lines. */
-export const chartAccentColor = RED;
+export const chartAccentColor = PRIMARY;
 
 /** Light grey used for chart "target"/empty backgrounds. */
-export const chartMutedColor = '#e5e5e5';
+export const chartMutedColor = BORDER;

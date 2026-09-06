@@ -27,13 +27,38 @@ export function OverviewPanel({
     <Stack spacing={2}>
       <TodaySummary data={comparison} loading={loading} variant="hero" />
 
-      <Box sx={{ border: 1, borderColor: 'divider', bgcolor: 'background.paper', p: 2 }}>
+ <Box sx={{ border: 1, borderColor: 'divider', bgcolor: 'background.paper', p: 2, borderRadius: '4px' }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+          <Typography variant="subtitle2">Last 7 days</Typography>
+          <Button component={Link} to="/insights?tab=reports" size="small" endIcon={<ArrowForward fontSize="small" />}>
+            Reports
+          </Button>
+        </Box>
+        {loading ? (
+          <Skeleton variant="rectangular" height={140} />
+        ) : !hasWeek ? (
+          <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+            Your trend appears after a few days of logging.
+          </Typography>
+        ) : (
+          <LineChart
+            height={150}
+            data={week.map((d) => ({
+              label: new Date(`${d.date}T00:00:00`).toLocaleDateString(undefined, { weekday: 'short' }),
+              value: d.calories,
+            }))}
+          />
+        )}
+      </Box>
+      
+      <Box sx={{ border: 1, borderColor: 'divider', bgcolor: 'background.paper', p: 2, borderRadius: '4px' }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
           <Typography variant="subtitle2">Today's meals</Typography>
           <Button component={Link} to="/insights?tab=meals" size="small" endIcon={<ArrowForward fontSize="small" />}>
             All meals
           </Button>
         </Box>
+
         {loading ? (
           <Skeleton variant="rectangular" height={96} />
         ) : todayMeals.length === 0 ? (
@@ -74,29 +99,7 @@ export function OverviewPanel({
         )}
       </Box>
 
-      <Box sx={{ border: 1, borderColor: 'divider', bgcolor: 'background.paper', p: 2 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-          <Typography variant="subtitle2">Last 7 days</Typography>
-          <Button component={Link} to="/insights?tab=reports" size="small" endIcon={<ArrowForward fontSize="small" />}>
-            Reports
-          </Button>
-        </Box>
-        {loading ? (
-          <Skeleton variant="rectangular" height={140} />
-        ) : !hasWeek ? (
-          <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-            Your trend appears after a few days of logging.
-          </Typography>
-        ) : (
-          <LineChart
-            height={150}
-            data={week.map((d) => ({
-              label: new Date(`${d.date}T00:00:00`).toLocaleDateString(undefined, { weekday: 'short' }),
-              value: d.calories,
-            }))}
-          />
-        )}
-      </Box>
+     
     </Stack>
   );
 }

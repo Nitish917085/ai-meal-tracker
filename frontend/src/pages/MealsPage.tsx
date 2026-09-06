@@ -24,6 +24,7 @@ import type { FoodEntry, MealType } from '../types';
 import { formatRelativeDate, formatTime, formatMicros, MEAL_TYPE_LABELS } from '../utils/format';
 import { DateRangeFilter, rangeForPreset, type DateRange, type RangePreset } from '../components/common/DateRangeFilter';
 import { MealDialog } from '../components/MealDialog';
+import { MealDetailDialog } from '../components/MealDetailDialog';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
 import { MealTypeIcon } from '../components/common/MealTypeIcon';
 import { PageHeader } from '../components/common/PageHeader';
@@ -50,6 +51,7 @@ export function MealsPage({ embedded = false }: { embedded?: boolean } = {}) {
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingMeal, setEditingMeal] = useState<FoodEntry | null>(null);
+  const [detailMeal, setDetailMeal] = useState<FoodEntry | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [rowMenu, setRowMenu] = useState<{ anchor: HTMLElement; meal: FoodEntry } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<FoodEntry | null>(null);
@@ -148,10 +150,12 @@ export function MealsPage({ embedded = false }: { embedded?: boolean } = {}) {
         }}
       />
 
+      <MealDetailDialog meal={detailMeal} onClose={() => setDetailMeal(null)} />
+
       {error && <Alert severity="error">{error}</Alert>}
 
       {/* Filters: equal-width meal-type toggles + preset date range. All controls share a 40px height. */}
-      <Stack direction={{ xs: 'column', lg: 'row' }} spacing={1.5} alignItems={{ lg: 'center' }} useFlexGap sx={{ flexShrink: 0 }}>
+      <Stack direction={{ xs: 'column', lg: 'row' }} spacing={1.5} alignItems={{ lg: 'flex-start' }} useFlexGap sx={{ flexShrink: 0 }}>
         <ToggleButtonGroup
           exclusive
           size="small"
@@ -174,18 +178,33 @@ export function MealsPage({ embedded = false }: { embedded?: boolean } = {}) {
             </ToggleButton>
           ))}
         </ToggleButtonGroup>
-        <DateRangeFilter
-          allowAllTime
-          preset={preset}
-          onPresetChange={setPreset}
-          value={range}
-          onChange={(r) => {
-            setRange(r);
-            setPage(1);
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: { xs: 'space-between', lg: 'flex-end' },
+            gap: 2,
+            flexGrow: { xs: 0, lg: 1 },
           }}
-        />
+        >
+          <Box sx={{ flexGrow: 0, flexShrink: 0 }}>
+            <DateRangeFilter
+              allowAllTime
+              preset={preset}
+              onPresetChange={setPreset}
+              value={range}
+              onChange={(r) => {
+                setRange(r);
+                setPage(1);
+              }}
+            />
+          </Box>
+          <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'nowrap', flexShrink: 0 }}>
+            {total} entr{total === 1 ? 'y' : 'ies'}
+          </Typography>
+        </Box>
         {filtersActive && (
-          <Button size="small" onClick={clearFilters} sx={{ alignSelf: { xs: 'flex-start', lg: 'center' } }}>
+          <Button size="small" onClick={clearFilters} sx={{ alignSelf: { xs: 'flex-start', lg: 'center' }, height: 40 }}>
             Clear filters
           </Button>
         )}
@@ -253,16 +272,12 @@ export function MealsPage({ embedded = false }: { embedded?: boolean } = {}) {
                     <Box
                       role="button"
                       tabIndex={0}
-                      aria-label={`Edit ${meal.foodName}`}
-                      onClick={() => {
-                        setEditingMeal(meal);
-                        setDialogOpen(true);
-                      }}
+                      aria-label={`View ${meal.foodName}`}
+                      onClick={() => setDetailMeal(meal)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault();
-                          setEditingMeal(meal);
-                          setDialogOpen(true);
+                          setDetailMeal(meal);
                         }
                       }}
                       sx={{
@@ -375,9 +390,6 @@ export function MealsPage({ embedded = false }: { embedded?: boolean } = {}) {
       {pageCount > 1 && (
         <Stack spacing={0.5} alignItems="center" sx={{ flexShrink: 0 }}>
           <Pagination count={pageCount} page={page} onChange={(_e, value) => setPage(value)} color="primary" />
-          <Typography variant="caption" color="text.secondary">
-            {total} entr{total === 1 ? 'y' : 'ies'}
-          </Typography>
         </Stack>
       )}
     </Stack>

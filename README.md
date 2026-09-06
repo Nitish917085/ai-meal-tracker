@@ -10,13 +10,15 @@ visualize macro/micronutrient trends, and use AI to extract nutrition from photo
 | Frontend  | React + TypeScript, Vite, Material UI                                |
 | AI        | OpenAI-compatible Chat Completions API (optional, graceful fallback)  |
 
-The frontend talks to the backend **exclusively through a REST API** (`/api/*`).
+The frontend talks to the calorie service through a REST API (`/api/*`) and to the
+standalone AI service directly at `http://localhost:4001` for extraction and chat.
 
 ---
 
 ## Features
 
-- **Multi-user auth** — sign up, log in, JWT-protected private data.
+- **Multi-user auth** — sign up (email + OTP verification), log in, JWT-protected
+  private data, and email-based password reset.
 - **Goal setting** — calorie / protein / carb / fat targets + optional weight goal.
 - **Meal entry** — grouped by meal type, with quantity, macros and micros.
 - **Time-range listing** — filterable by date range and meal type, with pagination.
@@ -24,7 +26,10 @@ The frontend talks to the backend **exclusively through a REST API** (`/api/*`).
   summary, and goal-vs-actual comparison (custom SVG charts, no chart library).
 - **AI photo extraction** — upload a nutrition label or plate of food to pre-fill nutrition.
 - **Conversational chat** — LLM agent that logs meals, checks goals and summarizes via tools.
-- **Bulk PDF import** — parse a food-diary PDF in the browser and import entries.
+- **AI bulk import** — extract nutrition from PDFs, images, or text and import in bulk.
+- **Durable memories** — the chat agent remembers user facts/preferences across sessions.
+- **Chat history** — conversations persisted per user in PostgreSQL.
+- **Demo data seeding** — one command to populate realistic sample data for evaluation.
 
 ---
 
@@ -86,19 +91,31 @@ Supabase is a hosted Postgres service — the backend connects to it with the sa
 > SQL editor (or via `supabase db push`) instead of letting the app create tables.
 > The SQL file is identical to the auto-applied schema.
 
-#### Authentication (custom JWT + refresh tokens)
+#### Authentication (custom JWT + refresh tokens + email OTP)
 
 The app uses its **own custom auth** — NOT Supabase Auth:
 
-- `POST /api/auth/register` — bcrypt-hashes the password and stores the user in the
-  `users` table, then returns an access + refresh token pair.
-- `POST /api/auth/login` — verifies the password with bcrypt and returns the token pair.
+- `POST /api/auth/register` — bcrypt-hashes the password, stores the user in the
+  `users` table (as unverified), and sends a 6-digit OTP to the email address.
+- `POST /api/auth/verify-register` — verifies the OTP, marks the email verified, and
+  returns an access + refresh token pair.
+- `POST /api/auth/login` — verifies the password with bcrypt, checks the email is
+  verified, and returns the token pair.
 - `POST /api/auth/refresh` — exchanges a valid refresh token for a fresh pair
   (rotating the old refresh token, so each can be used only once).
 - `POST /api/auth/logout` — revokes the presented refresh token.
 - `GET /api/auth/me` — validates the `Authorization: Bearer <accessToken>` header.
+- `POST /api/auth/forgot-password` — sends a password-reset OTP to the email.
+- `POST /api/auth/verify-otp` — confirms the OTP matches the most recently issued one.
+- `POST /api/auth/reset-password` — verifies the OTP and sets the new password
+  (revoking all existing sessions).
 - Every protected route passes through the `authenticate` middleware, which verifies
   the JWT and re-checks the user still exists.
+
+> **OTP email delivery** uses Gmail SMTP (`nodemailer`). Set `EMAIL_USER` /
+> `EMAIL_PASS` (a Gmail app password) in `calorie-service/.env`. For local
+> development, set `BYPASS_FULL_AUTH=true` to skip OTP verification entirely —
+> the codes are printed to the server console instead of emailed.
 
 **Token strategy**
 
@@ -184,6 +201,8 @@ their behalf. See `ai-services/README.md` for provider configuration.
 | `JWT_ACCESS_EXPIRES_IN` | `15m`               | Access token lifetime                         |
 | `JWT_REFRESH_EXPIRES_IN`| `30d`               | Refresh token lifetime                        |
 | `AI_SERVICE_URL`    | `http://localhost:4001`  | Standalone AI service the backend can call    |
+| `EMAIL_USER`        | *(empty)*                | Gmail address used to send OTP emails         |
+| `EMAIL_PASS`        | *(empty)*                | Gmail app password for OTP delivery           |
 | `BYPASS_FULL_AUTH`  | `false`                  | Skips OTP email verification when true        |
 
 ### AI service (`ai-services/.env`)
@@ -197,9 +216,10 @@ documented in `ai-services/README.md`.
 
 ### Frontend (`frontend/.env`)
 
-| Variable       | Default | Description                                            |
-| -------------- | ------- | ------------------------------------------------------ |
-| `VITE_API_URL` | *(empty)* | Set to e.g. `http://localhost:4000/api` when not using the dev proxy. |
+| Variable       | Default                  | Description                                            |
+| -------------- | ------------------------ | ------------------------------------------------------ |
+| `VITE_API_URL` | *(empty)*                | Set to e.g. `http://localhost:4000/api` when not using the dev proxy. |
+| `VITE_AI_URL`  | `http://localhost:4001`  | Base URL of the standalone AI service (extraction + chat). |
 
 ---
 
@@ -231,28 +251,42 @@ All endpoints (except auth) require an `Authorization: Bearer <accessToken>` hea
 List endpoints support `page` & `pageSize` query params and return
 `{ data, pagination: { page, pageSize, total, totalPages } }`.
 
-| Method | Path                         | Description                              |
-| ------ | ---------------------------- | ---------------------------------------- |
-| POST   | `/api/auth/register`         | Create account → `{ user, accessToken, refreshToken }` |
-| POST   | `/api/auth/login`            | Log in → `{ user, accessToken, refreshToken }` |
-| POST   | `/api/auth/refresh`          | `{ refreshToken }` → fresh token pair    |
-| POST   | `/api/auth/logout`           | `{ refreshToken }` → revoke it           |
-| GET    | `/api/auth/me`               | Current user                             |
-| GET    | `/api/goals`                 | Active + goal history                    |
-| POST   | `/api/goals`                 | Create/activate a goal                   |
-| PUT    | `/api/goals/:id`             | Update a goal                            |
-| GET    | `/api/meals`                 | List entries (`start`, `end`, `mealType`, pagination) |
-| POST   | `/api/meals`                 | Create a food entry                      |
-| GET    | `/api/meals/:id`             | Get one entry                            |
-| PUT    | `/api/meals/:id`             | Update an entry                          |
-| DELETE | `/api/meals/:id`             | Delete an entry                          |
-| GET    | `/api/reports/daily`         | Daily calorie/macro totals               |
-| GET    | `/api/reports/macros`        | Macro breakdown + daily totals           |
-| GET    | `/api/reports/micronutrients`| Vitamin/mineral summary                  |
-| GET    | `/api/reports/goal-comparison`| Goal vs. actual + % achievement         |
-| POST   | `/api/ai/extract`            | Multipart `image` → nutrition items      |
-| POST   | `/api/chat`                  | `{ messages }` → `{ reply }`             |
-| POST   | `/api/import/entries`        | `{ entries: [...] }` → bulk import       |
+| Method | Path                          | Description                              |
+| ------ | ----------------------------- | ---------------------------------------- |
+| POST   | `/api/auth/register`          | Create account → sends OTP               |
+| POST   | `/api/auth/verify-register`   | `{ email, otp }` → `{ user, accessToken, refreshToken }` |
+| POST   | `/api/auth/login`             | Log in → `{ user, accessToken, refreshToken }` |
+| POST   | `/api/auth/refresh`           | `{ refreshToken }` → fresh token pair    |
+| POST   | `/api/auth/logout`            | `{ refreshToken }` → revoke it           |
+| GET    | `/api/auth/me`                | Current user                             |
+| POST   | `/api/auth/forgot-password`   | `{ email }` → sends reset OTP            |
+| POST   | `/api/auth/verify-otp`        | `{ email, otp }` → confirm OTP           |
+| POST   | `/api/auth/reset-password`    | `{ email, otp, newPassword }` → reset    |
+| GET    | `/api/goals`                  | Active + goal history                    |
+| POST   | `/api/goals`                  | Create/activate a goal                   |
+| PUT    | `/api/goals/:id`              | Update a goal                            |
+| GET    | `/api/meals`                  | List entries (`start`, `end`, `mealType`, pagination) |
+| POST   | `/api/meals`                  | Create a food entry                      |
+| GET    | `/api/meals/:id`              | Get one entry                            |
+| PUT    | `/api/meals/:id`              | Update an entry                          |
+| DELETE | `/api/meals/:id`              | Delete an entry                          |
+| GET    | `/api/reports/daily`          | Daily calorie/macro totals               |
+| GET    | `/api/reports/macros`         | Macro breakdown + daily totals           |
+| GET    | `/api/reports/micronutrients` | Vitamin/mineral summary                  |
+| GET    | `/api/reports/goal-comparison`| Goal vs. actual + % achievement          |
+| POST   | `/api/import/entries`         | `{ entries: [...] }` → bulk import       |
+| GET    | `/api/memory`                 | List saved user memories                 |
+| POST   | `/api/memory`                 | `{ content }` → save a memory            |
+| DELETE | `/api/memory/:id`             | Delete a memory                          |
+| GET    | `/api/chat-history`           | List persisted chat messages (paginated) |
+| POST   | `/api/chat-history`           | `{ messages: [...] }` → append history   |
+| DELETE | `/api/chat-history`           | Clear the user's chat history            |
+| POST   | `/api/seed`                   | `{ days? }` → generate demo data         |
+| DELETE | `/api/seed`                   | Remove seeded (demo) entries             |
+
+> **AI endpoints** (`/extract`, `/extract-text`, `/chat`) are served by the
+> standalone **`ai-services`** app at `http://localhost:4001` and are documented in
+> `ai-services/README.md`. The frontend calls them directly (not via this API).
 
 ---
 

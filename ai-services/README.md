@@ -22,7 +22,7 @@ ai-services/
 | Method | Path            | Description                                        | Auth          |
 | ------ | --------------- | -------------------------------------------------- | ------------- |
 | GET    | `/health`       | Service health check                                | none          |
-| POST   | `/extract`      | `multipart/form-data` `image` → nutrition items     | Bearer token¹ |
+| POST   | `/extract`      | `multipart/form-data` `file` (image or PDF) → nutrition items | Bearer token¹ |
 | POST   | `/extract-text` | `{ text }` → nutrition items                        | Bearer token¹ |
 | POST   | `/chat`         | `{ messages }` → `{ reply }` (tool-calling agent)   | Bearer token¹ |
 | GET    | `/uploads/*`    | Serves uploaded images back to the client           | none          |
@@ -33,10 +33,12 @@ service itself does not validate the token.
 
 ### Example — extract nutrition from an image
 
+The upload field name is `file`; accepted types are JPEG, PNG, WebP, GIF, and PDF.
+
 ```bash
 curl -X POST http://localhost:4001/extract \
   -H "Authorization: Bearer <accessToken>" \
-  -F "image=@nutrition-label.jpg"
+  -F "file=@nutrition-label.jpg"
 ```
 
 ```json
@@ -76,6 +78,7 @@ Copy `.env.example` to `.env` and fill in the values.
 | `AI_BASE_URL`          | *(per provider)*                               | Override the provider's base URL |
 | `AI_CHAT_MODEL`        | `google/gemini-2.0-flash-exp:free`             | Model for chat (`OPENAI_MODEL` alias) |
 | `AI_VISION_MODEL`      | `google/gemini-2.0-flash-exp:free`             | Model for image extraction (`OPENAI_VISION_MODEL` alias) |
+| `AI_PAID_FALLBACK_MODEL` | `openai/gpt-4o-mini`                         | Last-resort paid model when no free/configured model works |
 | `OPENROUTER_REFERER`   | *(empty)*                                      | Optional `HTTP-Referer` header for OpenRouter attribution |
 | `OPENROUTER_TITLE`     | `CaloriePal`                                   | Optional `X-Title` header for OpenRouter |
 

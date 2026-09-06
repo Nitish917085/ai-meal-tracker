@@ -16,9 +16,9 @@ import {
   Typography,
   keyframes,
 } from '@mui/material';
-import { Add, Close, DeleteSweep, EditNote, Info, InsertDriveFile, Mic, PhotoCamera, Send, UploadFile } from '@mui/icons-material';
+import { Add, Close, DeleteSweep, EditNote, ExpandLess, ExpandMore, Info, InsertDriveFile, Mic, MicOff, PhotoCamera, Restaurant, Send, UploadFile } from '@mui/icons-material';
 import { appendChatHistory, clearChatHistory, listChatHistory, sendChat, type ChatMessage } from '../api/chat';
-import { createMeal, deleteMeal } from '../api/meals';
+import { createMeal, deleteMeal, listMeals, type MealInput } from '../api/meals';
 import type { ImportEntry } from '../api/import';
 import { ApiError, aiAssetUrl } from '../api/client';
 import type { FoodEntry } from '../types';
@@ -27,11 +27,11 @@ import { MEAL_TYPE_LABELS } from '../utils/format';
 import { fileToEntries, formatBytes, IMPORT_ACCEPT, isImageFile } from '../utils/extractFile';
 import { BarChart, DonutChart, LineChart } from '../components/Charts';
 import { ConfirmDialog } from '../components/common/ConfirmDialog';
-import { PageHeader } from '../components/common/PageHeader';
 import { TodaySummary } from '../components/common/TodaySummary';
 import { MealDialog } from '../components/MealDialog';
-import { MealResultCard } from '../components/log/MealResultCard';
-import { OverviewPanel } from '../components/log/OverviewPanel';
+import { MealResultCard } from '../components/home/MealResultCard';
+import { OverviewPanel } from '../components/home/OverviewPanel';
+import { useAuth } from '../context/AuthContext';
 import { useFeedback } from '../context/FeedbackContext';
 import { useTodayOverview } from '../hooks/useTodayOverview';
 
@@ -69,6 +69,26 @@ const uid = () => `${Date.now()}-${seq++}`;
 /** Human sentence describing an entry, used as the user's chat message after a manual/file log. */
 function describeEntry(e: FoodEntry | ImportEntry): string {
   return `${e.foodName} (${MEAL_TYPE_LABELS[e.mealType].toLowerCase()}, ${e.quantity} ${e.unit}) — ${Math.round(e.calories)} kcal, P ${Math.round(e.protein)}g · C ${Math.round(e.carbs)}g · F ${Math.round(e.fat)}g`;
+}
+
+/** Build a fresh log payload from an existing entry, reusing its nutrition. */
+function toMealInput(e: FoodEntry): MealInput {
+  return {
+    mealType: e.mealType,
+    foodName: e.foodName,
+    quantity: e.quantity,
+    unit: e.unit,
+    calories: e.calories,
+    protein: e.protein,
+    carbs: e.carbs,
+    fat: e.fat,
+    fiber: e.fiber,
+    sugar: e.sugar,
+    sodium: e.sodium,
+    vitamins: e.vitamins,
+    minerals: e.minerals,
+    consumedAt: new Date().toISOString(),
+  };
 }
 
 /** Convert persisted chat messages into thread items, filtering leaked config. */
@@ -145,7 +165,7 @@ const TAIL = 8;
  */
 function Bubble({ role, grouped = false, children, wide = false }: { role: 'user' | 'assistant'; grouped?: boolean; children: React.ReactNode; wide?: boolean }) {
   const isUser = role === 'user';
-  const bg = isUser ? '#0a0a0a' : ASSISTANT_BG;
+  const bg = isUser ? '#35ae62' : ASSISTANT_BG;
   return (
     <Box sx={{ display: 'flex', justifyContent: isUser ? 'flex-end' : 'flex-start', mt: grouped ? '-8px !important' : undefined, px: `${TAIL}px` }}>
       <Box
@@ -156,6 +176,8 @@ function Bubble({ role, grouped = false, children, wide = false }: { role: 'user
           minWidth: 0,
           px: 2,
           py: 1.25,
+          // 4px radius everywhere except the corner that carries the tail.
+          borderRadius: isUser ? '4px 0 4px 4px' : '0 4px 4px 4px',
           bgcolor: bg,
           color: isUser ? '#fff' : 'text.primary',
           ...(grouped
@@ -183,7 +205,8 @@ function Bubble({ role, grouped = false, children, wide = false }: { role: 'user
 
 /* --------------------------------- page --------------------------------- */
 
-export function LogPage() {
+export function HomePage() {
+  const { user } = useAuth();
   const { notify } = useFeedback();
   const overview = useTodayOverview();
 
@@ -208,6 +231,8 @@ export function LogPage() {
       return false;
     }
   });
+  const [overviewOpen, setOverviewOpen] = useState(true);
+  const [recentFoods, setRecentFoods] = useState<FoodEntry[]>([]);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const photoRef = useRef<HTMLInputElement>(null);
@@ -246,6 +271,29 @@ export function LogPage() {
       .finally(() => {
         if (!cancelled) setHistoryLoading(false);
       });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  /** Load a deduped list of the user's most recently eaten foods for quick re-log. */
+  useEffect(() => {
+    let cancelled = false;
+    listMeals({ pageSize: 50 })
+      .then((res) => {
+        if (cancelled) return;
+        const seen = new Set<string>();
+        const unique: FoodEntry[] = [];
+        for (const m of res.data) {
+          const key = m.foodName.trim().toLowerCase();
+          if (!seen.has(key)) {
+            seen.add(key);
+            unique.push(m);
+          }
+        }
+        setRecentFoods(unique.slice(0, 6));
+      })
+      .catch(() => undefined);
     return () => {
       cancelled = true;
     };
@@ -407,6 +455,29 @@ export function LogPage() {
     if (!aiUnavailable) await askAssistant({ role: 'user', content: `${text}. Any quick feedback?` }, { quietFallback: true });
   };
 
+  /** One-tap re-log of a previously eaten food (no assistant round-trip). */
+  const reLog = async (entry: FoodEntry) => {
+    setAddMenu(null);
+    try {
+      const saved = await createMeal(toMealInput(entry));
+      push({
+        id: uid(),
+        kind: 'result',
+        role: 'assistant',
+        text: `Logged ${saved.foodName} (${MEAL_TYPE_LABELS[saved.mealType].toLowerCase()}, ${saved.quantity} ${saved.unit}).`,
+        mode: 'logged',
+        logged: [saved],
+        pending: [],
+      });
+      window.dispatchEvent(new Event('caloriepal:meal-saved'));
+      setRecentFoods((prev) =>
+        [saved, ...prev.filter((m) => m.foodName.trim().toLowerCase() !== saved.foodName.trim().toLowerCase())].slice(0, 6),
+      );
+    } catch (err) {
+      notify(err instanceof ApiError ? err.message : 'Could not log entry', 'error');
+    }
+  };
+
   const send = () => {
     if (sending) return;
     if (photo) void sendPhoto(photo.file, photo.url, input.trim());
@@ -539,25 +610,37 @@ export function LogPage() {
   /* --------------------------------- render --------------------------------- */
 
   const thread = (
-    <Stack spacing={2} sx={{ flexGrow: 1, minHeight: 0 }}>
-      <Box sx={{ display: { xs: 'block', md: 'none' } }}>
-        <TodaySummary data={overview.comparison} loading={overview.loading} variant="hero" linkTo="/insights" />
+    <Stack sx={{ flexGrow: 1, minHeight: 0 }}>
+      <Box sx={{ display: { xs: 'block', md: 'none' }, mb: 2 }}>
+        <Button
+          fullWidth
+          size="small"
+          variant="outlined"
+          onClick={() => setOverviewOpen((v) => !v)}
+          endIcon={overviewOpen ? <ExpandLess fontSize="small" /> : <ExpandMore fontSize="small" />}
+          sx={{ mb: 1 }}
+        >
+          {overviewOpen ? 'Hide overview' : 'Show overview'}
+        </Button>
+        {overviewOpen && (
+          <TodaySummary data={overview.comparison} loading={overview.loading} variant="hero" linkTo="/insights" />
+        )}
       </Box>
 
       {aiUnavailable && (
-        <Alert severity="info" icon={<Info fontSize="inherit" />} onClose={() => setAiUnavailable(false)}>
+        <Alert severity="info" icon={<Info fontSize="inherit" />} onClose={() => setAiUnavailable(false)} sx={{ mb: 2 }}>
           {AI_OFF_TEXT}
         </Alert>
       )}
       {error && (
-        <Alert severity="error" onClose={() => setError(null)}>
+        <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
           {error}
         </Alert>
       )}
 
-      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: 280, border: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', minHeight: 280, border: 1, borderColor: 'divider', bgcolor: 'background.paper', borderRadius: '4px' }}>
         <Box ref={scrollRef} sx={{ flexGrow: 1, overflowY: 'auto', p: { xs: 1.5, sm: 2.5 }, display: 'flex', flexDirection: 'column' }}>
-          <Stack spacing={2} sx={{ mt: 'auto' }}>
+          <Stack spacing={2}>
             {historyLoading && (
               <>
                 <Skeleton variant="rectangular" width="60%" height={44} />
@@ -690,7 +773,7 @@ export function LogPage() {
       </Box>
 
       {/* Composer: [+] [camera] [input] [mic → send] */}
-      <Box>
+      <Box sx={{ mt: 2 }}>
         {photo && (
           <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1, p: 1, border: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
             <Box component="img" src={photo.url} alt="Selected food photo" sx={{ width: 56, height: 56, objectFit: 'cover' }} />
@@ -739,6 +822,20 @@ export function LogPage() {
               <ListItemIcon><UploadFile fontSize="small" /></ListItemIcon>
               <ListItemText primary="Upload a file" secondary="CSV, PDF, text or a diary photo" />
             </MenuItem>
+            {recentFoods.length > 0 && (
+              <>
+                <Divider />
+                <Typography variant="overline" color="text.secondary" sx={{ px: 2, pt: 1, display: 'block', lineHeight: 2 }}>
+                  Recent foods
+                </Typography>
+                {recentFoods.map((food) => (
+                  <MenuItem key={food.id} onClick={() => void reLog(food)}>
+                    <ListItemIcon><Restaurant fontSize="small" /></ListItemIcon>
+                    <ListItemText primary={food.foodName} secondary={`${MEAL_TYPE_LABELS[food.mealType]} · ${Math.round(food.calories)} kcal`} />
+                  </MenuItem>
+                ))}
+              </>
+            )}
             {!isEmpty && (
               <>
                 <Divider />
@@ -802,14 +899,14 @@ export function LogPage() {
                   width: 40,
                   height: 40,
                   flexShrink: 0,
-                  bgcolor: recording ? 'secondary.main' : 'primary.main',
+                  bgcolor: recording ? 'primary.main' : 'secondary.main',
                   color: '#fff',
                   animation: recording ? `${pulse} 1.2s infinite` : 'none',
-                  '&:hover': { bgcolor: recording ? 'secondary.dark' : 'primary.light' },
+                  '&:hover': { bgcolor: recording ? 'primary.dark' : 'secondary.dark' },
                   '&.Mui-disabled': { bgcolor: '#e5e5e5', color: '#a3a3a3' },
                 }}
               >
-                <Mic fontSize="small" />
+                {recording ? <Mic fontSize="small" /> : <MicOff fontSize="small" />}
               </IconButton>
             </Tooltip>
           )}
@@ -829,8 +926,13 @@ export function LogPage() {
 
   return (
     <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', height: { xs: 'calc(100dvh - 56px - 64px - 48px)', md: 'calc(100dvh - 64px - 64px)' } }}>
-      <Box sx={{ display: { xs: 'none', md: 'block' }, mb: 2 }}>
-        <PageHeader title="Log" subtitle="Photo, a sentence, your voice, or the form — whatever's fastest" />
+      <Box sx={{ flexShrink: 0, mb: 2 }}>
+        <Typography variant="h5" component="h1" sx={{ fontWeight: 700 }}>
+          Hi, {user?.name?.split(' ')[0] ?? 'there'}, how's it going today?
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25 }}>
+          Use the chatbot to ask anything, or add photos to log foods.
+        </Typography>
       </Box>
 
       <Box sx={{ flexGrow: 1, minHeight: 0, display: 'grid', gap: 3, gridTemplateColumns: { xs: '1fr', md: 'minmax(0, 1fr) 360px' } }}>

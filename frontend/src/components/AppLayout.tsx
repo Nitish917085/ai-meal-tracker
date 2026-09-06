@@ -33,7 +33,7 @@ import { ConfirmDialog } from './common/ConfirmDialog';
 import { BrandMark } from './common/BrandMark';
 
 const NAV_ITEMS = [
-  { label: 'Log', to: '/', icon: <AddCircle /> },
+  { label: 'Home', to: '/', icon: <AddCircle /> },
   { label: 'Insights', to: '/insights', icon: <InsertChart /> },
   { label: 'Goals', to: '/goals', icon: <Flag /> },
 ];
