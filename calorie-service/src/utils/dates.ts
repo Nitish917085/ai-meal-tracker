@@ -27,7 +27,7 @@ export function parseDateRange(
   defaultDays = 30,
 ): { start: string; end: string } {
   const endDate = end ? assertDate(end) : indiaDateKey(new Date());
-  const startDate = start ? assertDate(start) : toISO(addDays(new Date(endDate), -(defaultDays - 1)));
+  const startDate = start ? assertDate(start) : addDays(endDate, -(defaultDays - 1));
 
   if (startDate > endDate) {
     throw badRequest('start date must be before or equal to end date');

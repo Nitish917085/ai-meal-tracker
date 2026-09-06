@@ -24,6 +24,8 @@ The service listens on `http://localhost:4000` and exposes everything under `/ap
 - **Goals** — calorie / macro targets plus optional weight goal, with a single
   active goal and retained history.
 - **Meals** — CRUD for food entries grouped by meal type, with macro/micro values.
+- **Meal dates** — timestamps are stored in UTC, while calendar grouping and report
+  ranges use India Standard Time (`Asia/Kolkata`, UTC+05:30).
 - **Reports** — daily totals, macro breakdown, micronutrient summary, and
   goal-vs-actual comparison.
 - **Bulk import** — persist AI-extracted entries (PDF/image/text) in one request.
@@ -124,7 +126,7 @@ header. List endpoints accept `page` & `pageSize` and return
 
 A meal's `vitamins` and `minerals` are free-form JSONB objects of key/value
 numbers (e.g. `{ "vitamin_c": 12 }`). `consumedAt` accepts either an ISO datetime
-or a plain `YYYY-MM-DD` date (normalized to noon UTC).
+or a plain `YYYY-MM-DD` date (normalized to noon India time and stored as UTC).
 
 ### Reports
 

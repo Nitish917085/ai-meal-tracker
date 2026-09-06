@@ -8,8 +8,6 @@ import {
   IconButton,
   Stack,
   Typography,
-  useMediaQuery,
-  useTheme,
 } from '@mui/material';
 import { Close } from '@mui/icons-material';
 import type { FoodEntry } from '../types';

@@ -24,7 +24,7 @@ The dev server runs on `http://localhost:5173` and proxies `/api` to
 | `/login`           | `LoginPage`          | Sign in |
 | `/register`        | `RegisterPage`       | Create account (with OTP verification step) |
 | `/forgot-password` | `ForgotPasswordPage` | Request/reset password via OTP |
-| `/`                | `LogPage`            | Home — log meals and chat with the AI assistant |
+| `/`                | `HomePage`           | Home — log meals and chat with the AI assistant |
 | `/insights`        | `InsightsPage`       | Insights with tabs for meal history and reports |
 | `/goals`           | `GoalsPage`          | View/edit nutrition & weight goals |
 | `/import`          | `ImportPage`         | Bulk import via AI extraction (PDF/image/text) |
@@ -38,11 +38,15 @@ Legacy routes redirect to the current structure: `/chat` → `/`, `/meals` →
 
 - **Auth flow** — sign up, OTP email verification, login, forgot-password/reset,
   with transparent refresh-token handling and session restore.
+- **First-run onboarding** — save or skip initial nutrition and weight goals after registration.
 - **Log meals** — add/edit/delete entries by meal type with macros and micros.
+- **Quick re-log** — log recent foods again from the Home page without re-entering nutrition.
 - **AI chat** — conversational assistant that logs meals, checks goals, and
   summarizes reports (persisted chat history).
+- **Voice input** — dictate messages with automatic silence detection.
 - **Insights** — daily trends, macro breakdown, micronutrients, and goal comparison
   (custom SVG charts).
+- **Meal details** — click a meal to view its nutrition in a read-only modal; edit from the action menu.
 - **Goals** — set calorie/macro targets and an optional weight goal.
 - **Import** — extract nutrition from images, PDFs, or text and review before saving.
 - **Demo data** — seed/reset sample data for evaluation.
@@ -92,7 +96,7 @@ frontend/
     components/          # layout, charts, meal form/dialog, route guard, common
     context/             # auth context (session restore) + feedback context
     hooks/               # shared hooks (today overview)
-    pages/               # one component per screen
+    pages/               # one component per screen (Home, Insights, Goals, Import, …)
     styles/              # global CSS
     types/               # shared TypeScript types
     utils/               # date/format helpers + file dispatch

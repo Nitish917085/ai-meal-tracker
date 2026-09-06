@@ -1,3 +1,5 @@
+# Configuration instruction: use the OpenRouter API for dynamic model discovery and selection, with `ONLY_USA=true` to restrict choices to approved US vendors.
+
 # CaloriePal — AI Service
 
 Standalone microservice that owns **every AI-related operation** for CaloriePal:

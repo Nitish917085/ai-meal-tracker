@@ -35,6 +35,11 @@ export const goalSchema = z.object({
  * Accepts either an ISO datetime or a plain YYYY-MM-DD date and normalizes the
  * latter to noon UTC so date-based grouping behaves consistently.
  */
+/**
+ * Accepts either an ISO datetime or a plain YYYY-MM-DD date and normalizes the
+ * latter to noon India time so date-based grouping behaves consistently for
+ * users working in Asia/Kolkata.
+ */
 const consumedAtSchema = z
   .string()
   .min(1)
@@ -43,7 +48,7 @@ const consumedAtSchema = z
     'consumedAt must be a valid date or ISO datetime',
   )
   .transform((value) =>
-    /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T12:00:00.000Z` : new Date(value).toISOString(),
+    /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T06:30:00.000Z` : new Date(value).toISOString(),
   );
 
 export const mealSchema = z.object({

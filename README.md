@@ -1,8 +1,13 @@
+# Setup instruction: use the OpenRouter API with dynamic model/provider discovery and set `ONLY_USA=true` in `ai-services/.env`.
+
+**Quick setup:** [SETUP.md](SETUP.md)
+
 # CaloriePal — Personal Calorie Tracker
 
 A full-stack application to monitor, manage and understand daily nutritional intake.
 Users can log meals (breakfast, lunch, dinner, snacks), set personalized health goals,
-visualize macro/micronutrient trends, and use AI to extract nutrition from photos.
+visualize macro/micronutrient trends, and use AI to extract nutrition from photos,
+files, and conversation.
 
 | Layer     | Tech                                                                 |
 | --------- | -------------------------------------------------------------------- |
@@ -13,6 +18,7 @@ visualize macro/micronutrient trends, and use AI to extract nutrition from photo
 The frontend talks to the calorie service through a REST API (`/api/*`) and to the
 standalone AI service directly at `http://localhost:4001` for extraction and chat.
 
+**Demo video:** https://youtu.be/UDmRc2bWRd4
 ---
 
 ## Features
@@ -20,13 +26,18 @@ standalone AI service directly at `http://localhost:4001` for extraction and cha
 - **Multi-user auth** — sign up (email + OTP verification), log in, JWT-protected
   private data, and email-based password reset.
 - **Goal setting** — calorie / protein / carb / fat targets + optional weight goal.
+- **First-run onboarding** — new users can save or skip initial nutrition and weight goals.
 - **Meal entry** — grouped by meal type, with quantity, macros and micros.
 - **Time-range listing** — filterable by date range and meal type, with pagination.
+- **Meal details** — click a meal to view read-only nutrition details; edit from its action menu.
 - **Reports & graphs** — weekly calorie trend, macro breakdown, micronutrient
   summary, and goal-vs-actual comparison (custom SVG charts, no chart library).
+- **Daily macro chart** — stacked per-day protein, carbohydrate, and fat visualization.
 - **AI photo extraction** — upload a nutrition label or plate of food to pre-fill nutrition.
 - **Conversational chat** — LLM agent that logs meals, checks goals and summarizes via tools.
 - **AI bulk import** — extract nutrition from PDFs, images, or text and import in bulk.
+- **Quick re-log** — choose a recent food from the Home page and log it again in one tap.
+- **Voice input** — dictate meal descriptions and questions with automatic silence detection.
 - **Durable memories** — the chat agent remembers user facts/preferences across sessions.
 - **Chat history** — conversations persisted per user in PostgreSQL.
 - **Demo data seeding** — one command to populate realistic sample data for evaluation.
@@ -180,7 +191,7 @@ npm install
 npm run dev                   # starts the AI service on http://localhost:4001
 ```
 
-The AI service handles photo/text nutrition extraction and conversational chat.
+The AI service handles image/PDF/text nutrition extraction and conversational chat.
 It forwards the user's access token to the calorie service to read/write data on
 their behalf. See `ai-services/README.md` for provider configuration.
 
@@ -292,10 +303,11 @@ List endpoints support `page` & `pageSize` query params and return
 
 ## File & PDF import
 
-Photos, PDFs, and text files (`.txt`, `.csv`, `.md`, `.json`, etc.) are uploaded to
-the **AI service**, which extracts food items using the vision/text model. The
-extracted entries are returned to the frontend for review and then saved via the
-calorie service — no file is parsed in the browser.
+Photos and PDFs are uploaded to the **AI service**, which extracts food items using
+the vision model. Text files such as `.txt`, `.csv`, `.md`, `.json`, and `.log` are
+sent through the text extraction endpoint. The extracted entries are returned to
+the frontend for review and then saved via the calorie service — no file is parsed
+in the browser.
 
 The extractor handles nutrition-label photos, plates of food, tabular PDF food
 diaries, and free-text lists. Entries come back with `foodName`, `mealType`,
@@ -312,9 +324,10 @@ defaults to the current day.
   the schema flexible while remaining queryable.
 - **Single active goal** — creating a new goal deactivates prior goals; history is
   retained for reference.
-- **Dates** — report ranges use `YYYY-MM-DD`; a bare date on a meal is normalized to
-  noon UTC so date grouping is consistent across timezones. Grouping/filtering in SQL
-  uses `consumed_at AT TIME ZONE 'UTC'`.
+- **Dates and time** — timestamps are stored as UTC ISO values, while calendar
+  grouping, report ranges, “today,” seeded meal times, and displayed meal times use
+  India Standard Time (`Asia/Kolkata`, UTC+05:30). A bare meal date is normalized
+  to noon IST before being stored as UTC.
 - **PostgreSQL** — connection pooling via `pg.Pool`, parameterized queries throughout,
   `BIGINT` IDs (parsed back to numbers), and graceful shutdown on SIGINT/SIGTERM.
   Works with any Postgres host: local Docker or **Supabase** (SSL is auto-enabled for
@@ -358,7 +371,7 @@ frontend/
     api/                 # typed API client + per-resource modules
     components/          # layout, charts, meal form, route guard
     context/             # auth context (session restore)
-    pages/               # one component per screen (Log, Insights, Reports, …)
+    pages/               # one component per screen (Home, Insights, Goals, Import, …)
     utils/               # date/format helpers + file dispatch
     theme.ts             # Material UI theme
     main.tsx / App.tsx   # bootstrap + routing
