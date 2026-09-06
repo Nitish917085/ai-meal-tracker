@@ -18,7 +18,7 @@ files, and conversation.
 The frontend talks to the calorie service through a REST API (`/api/*`) and to the
 standalone AI service directly at `http://localhost:4001` for extraction and chat.
 
-**Demo video:** https://youtu.be/UDmRc2bWRd4
+**Demo video:** https://drive.google.com/file/d/1aWPXCi_cZxAx2oQDrEfCgI8sR9ySS5pX/view?usp=drive_link
 ---
 
 ## Features
