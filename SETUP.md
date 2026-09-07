@@ -1,5 +1,9 @@
 # Setup instruction: configure the AI service with OpenRouter, enable dynamic model selection, and set `ONLY_USA=true`.
 
+# I’m provided the environment files for both services for quick setup: ai-services.env and calorie-service.env in gdrive link as additonal comment in assigment form.
+
+# All API keys and tokens included in these files will expire in 5 days. The environment files are being provided solely for demo purposes to enable quick and easy setup.
+
 # CaloriePal Setup
 
 This guide explains how to configure and run CaloriePal locally.
